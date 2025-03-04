@@ -1,0 +1,13 @@
+Schedule,Chunk,Time
+static,1,1.74095e+09
+static,10,1.74095e+09
+static,100,1.74095e+09
+static,1000,1.74095e+09
+dynamic,1,1.74095e+09
+dynamic,10,1.74095e+09
+dynamic,100,1.74095e+09
+dynamic,1000,1.74095e+09
+guided,1,1.74095e+09
+guided,10,1.74095e+09
+guided,100,1.74095e+09
+guided,1000,1.74095e+09
