@@ -2,52 +2,44 @@
 CXX = pgc++
 
 # Флаги компиляции
-CXXFLAGS = -O3 -std=c++17 -acc -Minfo=all -I/usr/include/boost -I/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/comm_libs/12.3/openmpi4/openmpi-4.1.5/include
+CXXFLAGS = -fast -Minfo=all
 
-# Флаги линковки
-LDFLAGS = -L/opt/nvidia/hpc_sdk/Linux_x86_64/23.11/comm_libs/12.3/openmpi4/openmpi-4.1.5/lib -lmpi -lboost_program_options
+# Пути для заголовочных файлов
+INCLUDE_DIRS = -I/usr/include -I/usr/include/boost
 
-# Для OpenACC
-ACC_FLAGS_HOST = -acc=host
-ACC_FLAGS_GPU = -acc=gpu
-ACC_FLAGS_MULTICORE = -acc=multicore
+# Пути для библиотек
+LIBRARY_DIRS = -L/usr/lib -L/usr/lib/x86_64-linux-gnu
 
-# Файлы проекта
+# Библиотеки
+# LIBS = -lboost_program_options -acc
+LIBS = -lboost_program_options
+# Исходный файл
+# SRC = matrix_new.cpp
 SRC = main.cpp
-OBJ = $(SRC:.cpp=.o)
-TARGET = heat_solver
 
-# Сборка по умолчанию
-all: $(TARGET)
+# Имя исполняемого файла
+TARGET_GPU = heat_solver_gpu
+TARGET_CPU = heat_solver_cpu
 
-$(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+# Флаги для GPU и CPU
+ACC_FLAGS_GPU = -acc -gpu=cc70
+ACC_FLAGS_CPU = -acc=multicore
+# ACC_FLAGS_CPU = -acc=host
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Сборка под GPU
-gpu: clean
-	$(MAKE) CXXFLAGS="$(CXXFLAGS) $(ACC_FLAGS_GPU)" $(TARGET)
+# Цель по умолчанию
+all: $(TARGET_GPU) $(TARGET_CPU)
 
-# Сборка под CPU
-cpu: clean
-	$(MAKE) CXXFLAGS="$(CXXFLAGS) $(ACC_FLAGS_HOST)" $(TARGET)
+# Сборка для GPU
+$(TARGET_GPU): $(SRC)
+	$(CXX) $(CXXFLAGS) $(ACC_FLAGS_GPU) $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBS) $(SRC) -o $(TARGET_GPU)
 
-# Сборка под multicore
-multicore: clean
-	$(MAKE) CXXFLAGS="$(CXXFLAGS) $(ACC_FLAGS_MULTICORE)" $(TARGET)
-
-# Профилирование
-profile: clean
-	$(MAKE) CXXFLAGS="$(CXXFLAGS) -g -O0" $(TARGET)
+# Сборка для CPU
+$(TARGET_CPU): $(SRC)
+	$(CXX) $(CXXFLAGS) $(ACC_FLAGS_CPU) $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(LIBS) $(SRC) -o $(TARGET_CPU)
 
 # Очистка
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(TARGET_GPU) $(TARGET_CPU) *.o
 
-# Проверка
-print:
-	@echo "Компилятор: $(CXX)"
-	@echo "Флаги компиляции: $(CXXFLAGS)"
-	@echo "Флаги линковки: $(LDFLAGS)"
+.PHONY: all clean
